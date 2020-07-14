@@ -156,7 +156,7 @@ while stream.is_active():
     #SB: Get highest amplitude note... it's very similar to original author's freq
     amp = (np.abs(fft).argmax())
         
-    #SB: The test command list: root > major 2nd > perfect 4th
+    #SB: The test command list: root > major 2nd > major 3rd
     testcom = [0, 2, 4]
 
     #SB: detect notes with amp between 1500 and 400, around F7 and G5, edit if your whistling range is different but expect more noise and variance at lower and higher ranges
