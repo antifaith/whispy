@@ -13,9 +13,11 @@
 #  l  ~～ヽ 
 #  じ し f_,)√  
 # EDITED BY SPOONY BARD TO BE A WHISTLE DETECTOR!!!!!
+#SB: All code not by original author preceded by "SB:"
 
 import numpy as np
 import pyaudio
+#SB: Need to time whether notes are consecutive
 import time as t
 
 ######################################################################
@@ -52,12 +54,12 @@ def note_name(n): return NOTE_NAMES[n % 12] + str(n/12 - 1)
 
 
 #######################################################################
-# SB: I declared some stuff here and added functions to compare and edit the lists of notes generated
+#SB: I declared some stuff here, a and a2 store input and input converted to intervals, SinceLastDetection and time are used for the timer
 a = []
 a2 = []
 SinceLastDetection = 0
 time = 0
-#SB: This first function returns a relative note value so you don't have to whistle in A=440Hz, if you have perfect pitch you can replace f2 with 440.0 or relative_freq with original author's freq_to_number
+#SB: This first function returns a relative note value so you don't have to whistle in A=440Hz, if you have perfect pitch or are using a tuned instrument and want to detect specific notes you can replace f2 with 440.0, this would make the test command A B C#
 def relative_freq(f,f2): return 1200*np.log2(f/f2)
 #SB: remove adjacent elements that match from a list, I got this here https://stackoverflow.com/questions/3460161/remove-adjacent-duplicate-elements-from-a-list
 def remove_adjacent(nums):
@@ -82,7 +84,7 @@ def remove_adjacent(nums):
 #                nums.pop(i)  
 #        i += 1
 #    return nums
-#SB: this functions scrubs the results for each command, aka compares nums (unscrubbed note list) to listpopper (command list) and removes all entries in nums that do not exist in list popper. This is because whistling and environmental noise tends to produce lots of extra notes. I was having trouble with this and ConfusedReptile#6830 helped me finish this function on discord
+#SB: this functions scrubs the results for each command, ie compares nums (unscrubbed note list) to listpopper (command list) and removes all entries in nums that do not exist in list popper. This is because whistling and environmental noise tends to produce lots of extra notes. I was having trouble with this and ConfusedReptile#6830 helped me finish this function on discord
 def pop_list(nums,listpopper):
   i = 0
   while i < len(nums):
@@ -104,7 +106,6 @@ def contains(A, B):
     
 ######################################################################
 # Ok, ready to go now.
-
 # Get min/max index within FFT of notes we care about.
 # See docs for numpy.rfftfreq()
 def note_to_fftbin(n): return number_to_freq(n)/FREQ_STEP
@@ -155,45 +156,45 @@ while stream.is_active():
     #SB: Get highest amplitude note... it's very similar to original author's freq
     amp = (np.abs(fft).argmax())
         
-    #SB: The only command list currently supported, root, major 2nd, perfect 4th (all comments henceforth are SB)
+    #SB: The test command list: root > major 2nd > perfect 4th
     testcom = [0, 2, 4]
 
-    #detect notes with amp between 2500 and 400, around F7 and G5, edit if your whistling range is different but expect more noise and variance at lower and higher ranges
+    #SB: detect notes with amp between 1500 and 400, around F7 and G5, edit if your whistling range is different but expect more noise and variance at lower and higher ranges
     if num_frames >= FRAMES_PER_FFT and 1500 > amp > 400 and 'SinceLastDetection' in vars():
-        #check timer to see how long it was since sampling a note in the proper range
+        #SB: check timer to see how long it was since sampling a note in the proper range
         time = (t.perf_counter() - SinceLastDetection)
-        #add sampled frequency to list a if it was less than .25 sec since last append
+        #SB: add sampled frequency to list a if it was less than .25 sec since last append
         if time < .25:
             a.append(freq)
-            #debugging feedback, decomment if you want to see what's happening, also contains the original tuner and notes in a=440Hz:
+        #SB: debugging feedback, decomment if you want to see what's happening, also contains the original tuner feedback and notes in A=440Hz:
             #if len(a) >1:
                 #print ('freq: {:7.2f} Hz     note: {:>3s} {:+.2f} amp: {:f} {:f} {}'.format(
                     #freq, note_name(n0), n-n0, amp, freq, len(a)))
-        #update timer
+        #SB: update timer
         SinceLastDetection = t.perf_counter()
         
         
-    #activate once it's been over .25 seconds since last detection, also requires a note or ambient detection to execute command detection >.25 seconds after a command
+    #SB: activate once it's been over .25 seconds since last detection, also requires a note or ambient detection to execute command detection >.25 seconds after a command
     if time > .25:
-    #interpret data gathered, first determine if probably whistled notes by length
+    #SB: interpret data gathered, first determine if probably whistled notes by length
         if len(a) >= 10:
-            #set relative root to the 3rd input to reduce the chance of noise and increase chance of getting intended note
+            #SB: set relative root to the 3rd input to reduce the chance of noise and increase chance of getting intended note
             b = a[3]
-            #change frequencies to nearest note relative to a[3] in new list a2
+            #SB: change frequencies to half step (100 cent) intervals relative to a[3] and store in list a2
             for x in a: 
                 d = int(round(relative_freq(x,b)/100))
                 a2.append(d)              
-            #remove adjacent notes so we just have a string of distinct notes
+            #SB: remove adjacent notes so we just have a list of distinct notes
             remove_adjacent(a2)
-            #create a new list, a3, to compare to the first command
+            #SB: create a new list, a3, to scrub and compare to the command list
             a3 = a2.copy()
-            #remove all notes from list copy not contained in command
+            #SB: remove all notes from a3 not contained in command list
             pop_list(a3,testcom)
-            #print the whole list of notes detected
+            #SB: print the whole list of notes detected
             for x in range(len(a2)): 
                 print (a2[x]), 
-            #print whether detection was successful
+            #SB: print whether detection was successful
             print('{}'.format(contains(testcom,a3)))
-        #reset lists for next detection
+        #SB: reset lists for next detection
         del a[:]
         del a2[:]
