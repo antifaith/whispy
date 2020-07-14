@@ -11,7 +11,7 @@ This is now a whistle detector... I recommend setting commands to be a given num
 
 whispy.bat is just "python -m whispy.py"
 
-The only command currently recognized is 0, 2, 4 or root, major second, perfect fourth. The program will output true if the whistled notes contain all 3 notes in that order and false otherwise. I whistle the first bar of whiskey before breakfast and it generally works, it's far more consistent to slide up the scale to the 4th.
+The only command currently recognized is 0, 2, 4 or root, major second, perfect fourth. The program will output true if the whistled notes contain all 3 notes in that order and false otherwise. I whistle the first bar of whiskey before breakfast and it generally works, but it's far more consistent to slide up the scale to the 4th because the relative pitch detection might end up returning the wrong intervals.
 
 
 
